@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>University Chatbot</title>
+  <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      height: 100vh;
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    /* ── SPLASH ── */
+    #splash {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      background: white;
+    }
+
+    #collegeLogo { width: 260px; animation: zoomFade 0.8s forwards; }
+
+    #botLogo {
+      width: 180px; height: 180px;
+      border-radius: 50%; object-fit: cover;
+      display: none;
+      animation: zoomFade 1s forwards;
+    }
+
+    @keyframes zoomFade {
+      from { opacity: 0; transform: scale(0.5); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    /* ── LOGIN ── */
+    #loginPage {
+      display: none;
+      height: 100vh;
+      background: radial-gradient(circle at top left, #1a1a2e, #0f0f0f);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .login-container {
+      width: 350px; padding: 40px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+      text-align: center;
+      animation: fadeIn 1s ease;
+    }
+
+    .login-logo { width: 200px; margin-bottom: 30px; }
+
+    .input-group { position: relative; margin: 20px 0; }
+
+    .input-group input,
+    .input-group select {
+      width: 100%; padding: 14px 10px;
+      border: none; border-bottom: 1px solid #888;
+      background: rgba(255,255,255,0.1);
+      color: white; font-size: 16px;
+      outline: none; border-radius: 8px;
+    }
+
+    .input-group select option { background: #1a1a2e; color: white; }
+
+    .input-group label {
+      position: absolute; left: 10px; top: 14px;
+      color: #aaa; font-size: 14px;
+      transition: 0.3s ease; pointer-events: none;
+    }
+
+    .input-group input:focus + label,
+    .input-group input:valid + label,
+    .input-group select:focus + label,
+    .input-group select:valid + label {
+      top: -10px; font-size: 12px; color: #6c7ae0;
+    }
+
+    .login-bottom {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-top: 30px;
+    }
+
+    .login-bottom a { color: #6c7ae0; text-decoration: none; font-size: 14px; }
+
+    .login-bottom button {
+      background: linear-gradient(135deg, #6c7ae0, #8f9bff);
+      color: white; border: none; padding: 12px 26px;
+      border-radius: 10px; cursor: pointer;
+      font-weight: bold; transition: 0.3s;
+    }
+
+    .login-bottom button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 5px 20px rgba(108,122,224,0.5);
+    }
+
+    #error { color: #ff6b6b; margin-top: 10px; font-size: 14px; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── DASHBOARD ── */
+    #dashboard {
+      display: none;
+      height: 100vh;
+      flex-direction: row;
+      background: #f0f4ff;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 64px;
+      background: #1565c0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 0;
+      gap: 6px;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .sidebar-icon {
+      width: 42px; height: 42px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: rgba(255,255,255,0.7);
+      font-size: 20px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .sidebar-icon:hover { background: rgba(255,255,255,0.15); color: #fff; }
+    .sidebar-icon.active { background: rgba(255,255,255,0.25); color: #fff; }
+
+    /* Main area */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Top navbar */
+    .topbar {
+      height: 60px;
+      background: #ffffff;
+      border-bottom: 1px solid #dde3f0;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 16px;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(21,101,192,0.08);
+    }
+
+    .topbar-hamburger {
+      font-size: 22px;
+      color: #555;
+      cursor: pointer;
+      margin-right: 4px;
+    }
+
+    .topbar-logo { height: 40px; object-fit: contain; }
+
+    .topbar-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1565c0;
+      margin-right: auto;
+    }
+
+    .topbar-badge {
+      background: #1565c0;
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    .topbar-bell {
+      font-size: 22px;
+      color: #555;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .topbar-bell::after {
+      content: '';
+      width: 8px; height: 8px;
+      background: #e53935;
+      border-radius: 50%;
+      position: absolute;
+      top: 0; right: 0;
+    }
+
+    .topbar-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .topbar-user span {
+      font-size: 13px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .topbar-avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1565c0, #42a5f5);
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 14px; font-weight: 800;
+    }
+
+    /* School banner */
+    .school-banner {
+      background: #e8f0fe;
+      border-bottom: 1px solid #c5d5f7;
+      padding: 6px 20px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #1565c0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .school-banner::before {
+      content: '';
+      width: 8px; height: 8px;
+      background: #43a047;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* Content area */
+    .content-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 28px;
+    }
+
+    /* Module grid */
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 18px;
+    }
+
+    .module-card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      border: 1.5px solid #e0e8ff;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      animation: cardIn 0.4s both;
+    }
+
+    .module-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(21,101,192,0.15);
+      border-color: #90b4f7;
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .module-card:nth-child(1)  { animation-delay: 0.05s; }
+    .module-card:nth-child(2)  { animation-delay: 0.10s; }
+    .module-card:nth-child(3)  { animation-delay: 0.15s; }
+    .module-card:nth-child(4)  { animation-delay: 0.20s; }
+    .module-card:nth-child(5)  { animation-delay: 0.25s; }
+    .module-card:nth-child(6)  { animation-delay: 0.30s; }
+    .module-card:nth-child(7)  { animation-delay: 0.35s; }
+    .module-card:nth-child(8)  { animation-delay: 0.40s; }
+    .module-card:nth-child(9)  { animation-delay: 0.45s; }
+    .module-card:nth-child(10) { animation-delay: 0.50s; }
+    .module-card:nth-child(11) { animation-delay: 0.55s; }
+    .module-card:nth-child(12) { animation-delay: 0.60s; }
+    .module-card:nth-child(13) { animation-delay: 0.65s; }
+    .module-card:nth-child(14) { animation-delay: 0.70s; }
+    .module-card:nth-child(15) { animation-delay: 0.75s; }
+    .module-card:nth-child(16) { animation-delay: 0.80s; }
+    .module-card:nth-child(17) { animation-delay: 0.85s; }
+    .module-card:nth-child(18) { animation-delay: 0.90s; }
+    .module-card:nth-child(19) { animation-delay: 0.95s; }
+
+    .module-icon {
+      width: 56px; height: 56px;
+      border-radius: 14px;
+      background: #e8f0fe;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      color: #1565c0;
+      transition: background 0.2s;
+    }
+
+    .module-card:hover .module-icon {
+      background: #1565c0;
+      color: white;
+    }
+
+    .module-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #333;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    /* ── CHATBOT fixed bottom-right ── */
+    df-messenger {
+      --df-messenger-bot-message: #ffffff;
+      --df-messenger-user-message: #dcf8c6;
+      --df-messenger-chat-background: #ece5dd;
+      --df-messenger-button-titlebar-color: #1565c0;
+      position: fixed !important;
+      bottom: 20px;
+      right: 20px;
+      z-index: 9999;
+    }
+  </style>
+</head>
+
+<body>
+
+<audio id="openSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
+
+<!-- SPLASH -->
+<div id="splash">
+  <img src="clg.jpg.png" id="collegeLogo">
+  <img src="chatbotlogo.png" id="botLogo">
+</div>
+
+<!-- LOGIN -->
+<div id="loginPage">
+  <div class="login-container">
+    <img src="clg.jpg.png" class="login-logo">
+
+    <div class="input-group">
+      <input type="text" id="username" required>
+      <label>Login Id</label>
+    </div>
+
+    <div class="input-group">
+      <input type="password" id="password" required>
+      <label>Password</label>
+    </div>
+
+    <div class="input-group">
+      <select id="college" required>
+        <option value="" disabled selected></option>
+        <option>MRU</option>
+        <option>MRI</option>
+      </select>
+      <label>Select College</label>
+    </div>
+
+    <div class="login-bottom">
+      <a href="#">Forgot password?</a>
+      <button onclick="login()">Login ➜</button>
+    </div>
+
+    <p id="error"></p>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-icon active">🏠</div>
+    <div class="sidebar-icon">👥</div>
+    <div class="sidebar-icon">👤</div>
+    <div class="sidebar-icon">🌐</div>
+    <div class="sidebar-icon">📊</div>
+    <div class="sidebar-icon">🏫</div>
+    <div class="sidebar-icon">📅</div>
+    <div class="sidebar-icon">💰</div>
+    <div class="sidebar-icon">📋</div>
+    <div class="sidebar-icon">📁</div>
+    <div class="sidebar-icon">📢</div>
+    <div class="sidebar-icon">⚙️</div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topbar-hamburger">☰</div>
+      <img src="clg.jpg.png" class="topbar-logo" onerror="this.style.display='none'">
+      <span class="topbar-title">EMS Portal</span>
+      <span class="topbar-badge" id="collegeBadge">MRU</span>
+      <div class="topbar-bell">🔔</div>
+      <div class="topbar-user">
+        <span id="usernameDisplay">ADMIN</span>
+        <div class="topbar-avatar" id="avatarInitial">A</div>
+      </div>
+    </div>
+
+    <!-- School banner -->
+    <div class="school-banner" id="schoolBanner">MRU – School of Engineering</div>
+
+    <!-- Modules -->
+    <div class="content-area">
+      <div class="module-grid" id="moduleGrid"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Chatbot fixed bottom-right (hidden until login) -->
+<df-messenger
+  intent="WELCOME"
+  chat-title="UniversityBot"
+  agent-id="bc79bef3-60cd-4890-9176-bdf170f1cc27"
+  language-code="en"
+  style="display:none">
+</df-messenger>
+
+<script>
+  // Splash sequence
+  setTimeout(() => {
+    document.getElementById("collegeLogo").style.display = "none";
+    document.getElementById("botLogo").style.display = "block";
+  }, 1500);
+
+  setTimeout(() => {
+    document.getElementById("splash").style.display = "none";
+    document.getElementById("loginPage").style.display = "flex";
+  }, 3000);
+
+  // Login
+  function login() {
+    const user = document.getElementById("username").value.trim();
+    const pass = document.getElementById("password").value;
+    const col  = document.getElementById("college").value;
+
+    if (user === "admin" && pass === "8007") {
+      document.getElementById("loginPage").style.display = "none";
+      document.getElementById("dashboard").style.display = "flex";
+
+      // Update topbar
+      const displayName = user.toUpperCase();
+      document.getElementById("usernameDisplay").textContent = displayName;
+      document.getElementById("avatarInitial").textContent  = displayName.charAt(0);
+      document.getElementById("collegeBadge").textContent   = col || "MRU";
+
+      // Update banner
+      const banner = document.getElementById("schoolBanner");
+      banner.textContent = (col || "MRU") + " – School of Engineering";
+
+      // Show chatbot
+      document.querySelector("df-messenger").style.display = "";
+
+      document.getElementById("openSound").play().catch(() => {});
+      buildGrid();
+    } else {
+      document.getElementById("error").textContent = "Invalid credentials!";
+    }
+  }
+
+  // Dashboard modules
+  const modules = [
+    { label: "AI Assistant",          icon: "🤖" },
+    { label: "Admit Card",            icon: "🪪" },
+    { label: "Assignments",           icon: "📝" },
+    { label: "Attendance",            icon: "✅" },
+    { label: "Attendance",            icon: "👥" },
+    { label: "Central Communication", icon: "📡" },
+    { label: "Circular",              icon: "🔄" },
+    { label: "College Info",          icon: "🏫" },
+    { label: "Courses",               icon: "📚" },
+    { label: "Fee Undertaking",       icon: "💵" },
+    { label: "Feedback",              icon: "💬" },
+    { label: "Fees",                  icon: "💳" },
+    { label: "Google Form Links",     icon: "🔗" },
+    { label: "Grievance Complaint",   icon: "📣" },
+    { label: "LMS",                   icon: "🖥️" },
+    { label: "Mentor Mentee",         icon: "🤝" },
+    { label: "My Report Card",        icon: "📊" },
+    { label: "Performances",          icon: "🏆" },
+    { label: "Placement Management",  icon: "⚙️" },
+    { label: "Survey",                icon: "📋" },
+    { label: "Time Table",            icon: "🗓️" },
+  ];
+
+  function buildGrid() {
+    const grid = document.getElementById("moduleGrid");
+    grid.innerHTML = "";
+    modules.forEach(m => {
+      const card = document.createElement("div");
+      card.className = "module-card";
+      card.innerHTML = `
+        <div class="module-icon">${m.icon}</div>
+        <div class="module-label">${m.label}</div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+</script>
+
+</body>
+</html>

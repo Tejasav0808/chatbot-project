@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>University Chatbot</title>
+
+  <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      height: 100vh;
+      background: #ffffff;
+    }
+
+    /* SPLASH */
+    #splash {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      background: white;
+    }
+
+    #collegeLogo {
+      width: 260px;
+      animation: zoomFade 0.8s forwards;
+    }
+
+    #botLogo {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: none;
+      animation: zoomFade 1s forwards;
+    }
+
+    @keyframes zoomFade {
+      from { opacity: 0; transform: scale(0.5); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* LOGIN */
+    #loginPage {
+      display: none;
+      height: 100vh;
+      background: radial-gradient(circle at top left, #1a1a2e, #0f0f0f);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .login-container {
+      width: 350px;
+      padding: 40px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+      text-align: center;
+      animation: fadeIn 1s ease;
+    }
+
+    .login-logo {
+      width: 200px;
+      margin-bottom: 30px;
+    }
+
+    .input-group {
+      position: relative;
+      margin: 20px 0;
+    }
+
+    .input-group input,
+    .input-group select {
+      width: 100%;
+      padding: 14px 10px;
+      border: none;
+      border-bottom: 1px solid #888;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      font-size: 16px;
+      outline: none;
+      border-radius: 8px;
+    }
+
+    /* FIX DROPDOWN TEXT */
+    .input-group select option {
+      background: #1a1a2e;
+      color: white;
+    }
+
+    .input-group label {
+      position: absolute;
+      left: 10px;
+      top: 14px;
+      color: #aaa;
+      font-size: 14px;
+      transition: 0.3s ease;
+      pointer-events: none;
+    }
+
+    .input-group input:focus + label,
+    .input-group input:valid + label,
+    .input-group select:focus + label,
+    .input-group select:valid + label {
+      top: -10px;
+      font-size: 12px;
+      color: #6c7ae0;
+    }
+
+    .login-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 30px;
+    }
+
+    .login-bottom a {
+      color: #6c7ae0;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .login-bottom button {
+      background: linear-gradient(135deg, #6c7ae0, #8f9bff);
+      color: white;
+      border: none;
+      padding: 12px 26px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    .login-bottom button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 5px 20px rgba(108,122,224,0.5);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* CHAT */
+    #chatContainer {
+      display: none;
+      height: 100vh;
+      width: 100%;
+      background: #0f0f0f;
+      position: relative;
+    }
+
+    #chatHeader {
+      height: 60px;
+      background: #075e54;
+      color: white;
+      display: flex;
+      align-items: center;
+      padding: 0 15px;
+      font-weight: bold;
+    }
+
+    #typing {
+      color: white;
+      padding: 10px;
+      display: none;
+    }
+
+    df-messenger {
+      --df-messenger-bot-message: #ffffff;
+      --df-messenger-user-message: #dcf8c6;
+      --df-messenger-chat-background: #ece5dd;
+      --df-messenger-button-titlebar-color: #075e54;
+
+      position: absolute !important;
+      top: 60px;
+      left: 0;
+      width: 100%;
+      height: calc(100% - 60px);
+    }
+  </style>
+</head>
+
+<body>
+
+<audio id="openSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
+
+<!-- SPLASH -->
+<div id="splash">
+  <img src="clg.jpg.png" id="collegeLogo">
+  <img src="chatbotlogo.png" id="botLogo">
+</div>
+
+<!-- LOGIN -->
+<div id="loginPage">
+  <div class="login-container">
+
+    <img src="clg.jpg.png" class="login-logo">
+
+    <div class="input-group">
+      <input type="text" id="username" required>
+      <label>Login Id</label>
+    </div>
+
+    <div class="input-group">
+      <input type="password" id="password" required>
+      <label>Password</label>
+    </div>
+
+    <div class="input-group">
+      <select id="college" required>
+        <option value="" disabled selected></option>
+        <option>MRU</option>
+        <option>MRI</option>
+      </select>
+      <label>Select College</label>
+    </div>
+
+    <div class="login-bottom">
+      <a href="#">Forgot password?</a>
+      <button onclick="login()">Login ➜</button>
+    </div>
+
+    <p id="error"></p>
+
+  </div>
+</div>
+
+<!-- CHAT -->
+<div id="chatContainer">
+  <div id="chatHeader">🎓 UniversityBot</div>
+  <div id="typing">Bot is typing...</div>
+
+  <df-messenger
+    intent="WELCOME"
+    chat-title="UniversityBot"
+    agent-id="bc79bef3-60cd-4890-9176-bdf170f1cc27"
+    language-code="en">
+  </df-messenger>
+</div>
+
+<script>
+  setTimeout(() => {
+    document.getElementById("collegeLogo").style.display = "none";
+    document.getElementById("botLogo").style.display = "block";
+  }, 1500);
+
+  setTimeout(() => {
+    document.getElementById("splash").style.display = "none";
+    document.getElementById("loginPage").style.display = "flex";
+  }, 3000);
+
+  function login() {
+    let user = document.getElementById("username").value;
+    let pass = document.getElementById("password").value;
+
+    if (user === "admin" && pass === "0808") {
+      document.getElementById("loginPage").style.display = "none";
+      document.getElementById("chatContainer").style.display = "block";
+
+      document.getElementById("openSound").play();
+
+      document.getElementById("typing").style.display = "block";
+
+      setTimeout(() => {
+        document.getElementById("typing").style.display = "none";
+      }, 2000);
+    } else {
+      document.getElementById("error").innerText = "Invalid credentials!";
+    }
+  }
+</script>
+
+</body>
+</html>
