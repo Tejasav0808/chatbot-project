@@ -56,7 +56,7 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest(async (req, re
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
-          "Authorization": "Bearer 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", // 🔑 PUT YOUR KEY
+          "Authorization": "Bearer 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", // 🔑 PUT YOUR KEY
           "Content-Type": "application/json",
           "HTTP-Referer": "https://yourapp.com",
           "X-Title": "UniversityBot"
