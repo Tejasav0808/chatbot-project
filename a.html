@@ -6,67 +6,128 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest(async (req, re
 
   const agent = new WebhookClient({ request: req, response: res });
 
+  // 🎓 BASIC COURSE INFO
   function courseDetails(agent) {
     const course = agent.parameters.course;
 
     if (course === "btech") {
-      agent.add("BTech is a 4-year engineering program with branches like CSE, Mechanical, Civil, etc.");
-    } else if (course === "bca") {
-      agent.add("BCA is a 3-year course focused on programming and software development.");
-    } else if (course === "mba") {
-    agent.add("MBA is a 2-year postgraduate program focused on business management, marketing, finance, and leadership skills.");
-  }else {
-      agent.add("Please specify a valid course.");
+      agent.add("🎓 BTech is a 4-year engineering program with specializations like CSE, AI, Data Science, Cybersecurity, Mechanical, Civil, Electrical, and Electronics.");
+    } else {
+      agent.add("Please ask about BTech.");
     }
   }
+
+  // 🧠 SPECIALIZATION DETAILS
+  function askCourseDetails(agent) {
+    const spec = agent.parameters.specialization;
+
+    const details = {
+      "ai": "🤖 AI focuses on machine learning, deep learning, and automation.",
+      "cse": "💻 CSE covers programming, data structures, and software development.",
+      "data science": "📊 Data Science focuses on data analysis, statistics, and machine learning.",
+      "cybersecurity": "🔐 Cybersecurity focuses on protecting systems and networks from cyber threats.",
+      "it": "🌐 IT focuses on networking and system management.",
+      "mechanical": "⚙️ Mechanical deals with machines and manufacturing.",
+      "civil": "🏗️ Civil engineering deals with construction and infrastructure.",
+      "electrical": "⚡ Electrical focuses on power systems and circuits.",
+      "electronics": "📡 Electronics deals with communication systems."
+    };
+
+    if (!spec) {
+      agent.add("Which specialization? (AI, CSE, Data Science, etc.)");
+      return;
+    }
+
+    agent.add(details[spec] || "Please choose a valid specialization.");
+  }
+
+  // 📚 LIST SPECIALIZATIONS
   function specialization(agent) {
-  const course = agent.parameters.course;
-
-  if (course === "btech") {
-    agent.add("BTech offers specializations like Cyber Security, AI/ML, Full Stack Development, Computer Science, Mechanical, Civil, Electrical, and Electronics.");
-  } 
-  else if (course === "mba") {
-    agent.add("MBA offers specializations like Marketing, Finance, Human Resources, Operations, and Business Analytics.");
-  } 
-  else {
-    agent.add("Please specify the course like BTech or MBA.");
+    agent.add(
+      "🎓 BTech offers these specializations:\n\n• CSE\n• AI\n• Data Science\n• Cybersecurity\n• IT\n• Mechanical\n• Civil\n• Electrical\n• Electronics\n\n👉 You can ask: 'fees of AI' or 'details of CSE'"
+    );
   }
-}
 
-  // 💰 Course Fees (YOUR OWN ANSWER)
-  function courseFees(agent) {
-    const course = agent.parameters.course;
+  // 💰 FEES
+  function askFees(agent) {
+    const spec = agent.parameters.specialization;
 
-    if (course === "btech") {
-      agent.add("BTech fees are around ₹1–3 lakh per year.");
-    } else if (course === "bca") {
-      agent.add("BCA fees are around ₹50,000–₹1,50,000 per year.");
-    } else if (course === "mba") {
-    agent.add("MBA fees are around ₹80,000–₹2 lakh per year.");
-  }else {
-      agent.add("Please specify a valid course.");
+    if (!spec) {
+      agent.add("Which specialization? (AI, CSE, Data Science, etc.)");
+      return;
+    }
+
+    sendFees(agent, spec);
+  }
+
+  // 🔥 CONTEXT HANDLER
+  function provideSpecialization(agent) {
+    const spec = agent.parameters.specialization;
+    sendFees(agent, spec);
+  }
+
+  function sendFees(agent, spec) {
+    const fees = {
+      "ai": "💰 BTech AI fees are around ₹1.5–3 lakh per year.",
+      "cse": "💰 BTech CSE fees are around ₹1.5–3 lakh per year.",
+      "data science": "💰 BTech Data Science fees are around ₹1.5–3 lakh per year.",
+      "cybersecurity": "💰 BTech Cybersecurity fees are around ₹1.5–3 lakh per year.",
+      "it": "💰 BTech IT fees are around ₹1.5–3 lakh per year.",
+      "mechanical": "💰 BTech Mechanical fees are around ₹1–2.5 lakh per year.",
+      "civil": "💰 BTech Civil fees are around ₹1–2 lakh per year.",
+      "electrical": "💰 BTech Electrical fees are around ₹1–2.5 lakh per year.",
+      "electronics": "💰 BTech Electronics fees are around ₹1–2.5 lakh per year."
+    };
+
+    agent.add(fees[spec] || "Please choose a valid specialization.");
+  }
+
+  // 🎯 PLACEMENTS (FROM YOUR PDF 🔥)
+  function askPlacements(agent) {
+    const spec = agent.parameters.specialization;
+
+    const generalPlacement =
+      "📊 BTech placements are strong.\n\n" +
+      "🏆 Highest package: ₹51 LPA (Google)\n" +
+      "💼 Average package: ₹4–8 LPA\n" +
+      "🚀 Top recruiters: Google, British Telecom, Capgemini, Coforge, HCL, Infogain, LTIMindtree.";
+
+    const specializationPlacement = {
+      "cse": "💻 CSE has excellent placements.\n\n🏆 Up to ₹51 LPA\n📊 Average: ₹5–10 LPA\n🏢 Companies: Google, Capgemini, Coforge, HCL.",
+      "ai": "🤖 AI has very high demand.\n\n📊 Packages: ₹6–15 LPA\n🏢 Companies: Product-based + AI startups.",
+      "data science": "📊 Data Science offers strong packages.\n\n📊 ₹6–18 LPA depending on skills.",
+      "cybersecurity": "🔐 Cybersecurity is growing fast.\n\n📊 ₹5–12 LPA with security roles.",
+      "it": "🌐 IT offers stable placements.\n\n📊 ₹4–10 LPA in software roles.",
+      "mechanical": "⚙️ Mechanical offers ₹4–6 LPA in core industries.",
+      "civil": "🏗️ Civil offers ₹3–5 LPA in construction sector.",
+      "electrical": "⚡ Electrical offers ₹4–7 LPA in core sector.",
+      "electronics": "📡 Electronics offers ₹5–8 LPA in tech roles."
+    };
+
+    if (spec) {
+      agent.add(specializationPlacement[spec] || generalPlacement);
+    } else {
+      agent.add(generalPlacement);
     }
   }
 
+  // 🤖 AI FALLBACK
   async function aiResponse(agent) {
     const userQuery = req.body.queryResult.queryText;
 
-    try { // ✅ FIXED (added try)
-
+    try {
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
-          "Authorization": "Bearer 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", // 🔑 PUT YOUR KEY
-          "Content-Type": "application/json",
-          "HTTP-Referer": "https://yourapp.com",
-          "X-Title": "UniversityBot"
+          "Authorization": "Bearer YOUR_API_KEY",
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           model: "meta-llama/llama-3-8b-instruct",
           messages: [
             {
               role: "system",
-              content: "You are a university chatbot. Answer in 3-5 bullet points only. Avoid long paragraphs."
+              content: "You are a university chatbot. Answer in short bullet points."
             },
             {
               role: "user",
@@ -77,33 +138,26 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest(async (req, re
       });
 
       const data = await response.json();
-
-      console.log("API RESPONSE:", JSON.stringify(data));
-
-      if (!data.choices || !data.choices[0]) {
-        agent.add("AI not responding properly.");
-        return;
-      }
-
-      const reply = data.choices[0].message.content;
+      const reply = data?.choices?.[0]?.message?.content || "AI not responding.";
       agent.add(reply);
 
     } catch (error) {
-      console.error("❌ ERROR:", error);
+      console.error(error);
       agent.add("AI error. Try again.");
     }
   }
 
-
   let intentMap = new Map();
 
-  // 🔥 YOUR ANSWERS
+  // 🔥 INTENT MAPPING
+  intentMap.set("ask_course_details", askCourseDetails);
+  intentMap.set("ask_specializations", specialization);
+  intentMap.set("ask_fees", askFees);
+  intentMap.set("provide_specialization", provideSpecialization);
+  intentMap.set("ask_placements", askPlacements); // ✅ ADDED
   intentMap.set("Course Details Intent", courseDetails);
-  intentMap.set("Course Fees Intent", courseFees);
- intentMap.set("Specialization Intent", specialization);
 
-
-  // 🤖 AI fallback
+  // 🤖 fallback
   intentMap.set("Default Fallback Intent", aiResponse);
   intentMap.set("Default Welcome Intent", aiResponse);
 
